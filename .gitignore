@@ -1,0 +1,16 @@
+# 构建产物
+.build/
+build/
+.smoke/
+.testdata/
+
+# 开发验收截图与报告
+.build/verify/
+docs/screenshots/*.tmp.png
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
