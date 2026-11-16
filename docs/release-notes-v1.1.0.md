@@ -1,6 +1,12 @@
 ## 日程备忘录 v1.1.0
 
+![主面板](https://raw.githubusercontent.com/ZhenwenZhang/ScheduleMemo/main/docs/screenshots/popover.png)
+
 首个公开发布版本：一个纯本地的 macOS 菜单栏日程应用，点开菜单栏图标即可管理日程。
+
+| 新建 / 编辑 | 设置 |
+| --- | --- |
+| ![表单](https://raw.githubusercontent.com/ZhenwenZhang/ScheduleMemo/main/docs/screenshots/editor.png) | ![设置](https://raw.githubusercontent.com/ZhenwenZhang/ScheduleMemo/main/docs/screenshots/settings.png) |
 
 ### 功能亮点
 
@@ -27,4 +33,12 @@
 
 ### 校验
 
-SHA-256 见 `ScheduleMemo-1.1.0.dmg.sha256`。
+```bash
+shasum -a 256 -c ScheduleMemo-1.1.0.dmg.sha256
+```
+
+SHA-256：`03302ebf10251f286c7639bdcd02912a11824404c7dce66ce6ffe2621a01d7c8`
+
+### 源码
+
+https://github.com/ZhenwenZhang/ScheduleMemo
