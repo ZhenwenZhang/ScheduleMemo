@@ -167,7 +167,7 @@ python3 -m pip install --target .build/pylibs rapidocr_onnxruntime
 
 脚本会：构建 **arm64 + x86_64 通用二进制** → 生成 DMG 与 SHA-256 → 推送 `main` 与 `vX.Y.Z` tag → 用 `gh` 创建 GitHub Release 并上传 DMG。
 
-另外，推送 `v*` tag 也会触发 GitHub Actions（[`.github/workflows/release.yml`](.github/workflows/release.yml)）自动构建并上传 DMG。也可只在本机构建 DMG：
+也可只在本机构建 DMG：
 
 ```bash
 ./build.sh && ./make_dmg.sh
@@ -194,7 +194,6 @@ Resources/Info.plist      LSUIElement=true（只在菜单栏出现）
 tools/                    构建辅助、图标生成、UI 验收脚本
 make_dmg.sh               DMG 打包脚本
 release.sh                一键发布（构建 + tag + Release）
-.github/workflows/        GitHub Actions 自动发布
 Tests/LogicTests/main.swift  逻辑单元测试
 ```
 
