@@ -77,11 +77,14 @@ APPLESCRIPT
 fi
 
 echo "▸ 压缩为只读 DMG…"
+rm -f "$DMG"
 hdiutil convert "$TEMP_DMG" -format UDZO -imagekey zlib-level=9 -o "$DMG" >/dev/null
 rm -rf ".build/dmg"
 
 echo "▸ 生成校验值…"
-shasum -a 256 "$DMG" | tee "${DMG}.sha256"
+# 校验文件里只保留文件名，下载后可直接 shasum -c
+( cd build && shasum -a 256 "$(basename "$DMG")" > "$(basename "$DMG").sha256" )
+cat "${DMG}.sha256"
 
 echo ""
 echo "✅ DMG：$(pwd)/${DMG}"
