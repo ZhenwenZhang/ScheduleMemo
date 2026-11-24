@@ -41,7 +41,12 @@ final class AppSettings: ObservableObject {
 
     /// 自动化验收时使用独立域，避免改动真实使用中的偏好设置。
     private static func makeDefaults() -> UserDefaults {
-        if ProcessInfo.processInfo.environment["SCHEDULEMEMO_DATA_DIR"] != nil,
+        let env = ProcessInfo.processInfo.environment
+        if let suiteName = env["SCHEDULEMEMO_DEFAULTS_SUITE"], !suiteName.isEmpty,
+           let suite = UserDefaults(suiteName: suiteName) {
+            return suite
+        }
+        if env["SCHEDULEMEMO_DATA_DIR"] != nil,
            let suite = UserDefaults(suiteName: "com.zhenwenzhang.schedulememo.tests") {
             return suite
         }
@@ -52,7 +57,8 @@ final class AppSettings: ObservableObject {
         let resolved = defaults ?? AppSettings.makeDefaults()
         self.defaults = resolved
         let storedMode = resolved.string(forKey: Keys.menuBarMode) ?? ""
-        menuBarMode = MenuBarTextMode(rawValue: storedMode) ?? .next
+        // 默认只在菜单栏显示图标，不显示文字；老用户已保存的选择仍然尊重。
+        menuBarMode = MenuBarTextMode(rawValue: storedMode) ?? .iconOnly
 
         if resolved.object(forKey: Keys.defaultReminder) == nil {
             defaultReminderMinutes = 10

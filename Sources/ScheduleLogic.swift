@@ -229,10 +229,11 @@ enum ScheduleLogic {
         calendar: Calendar = ScheduleCalendar.work
     ) -> (text: String?, alert: Bool) {
         let summary = statusSummary(items: items, now: now, calendar: calendar)
+        // 仅图标模式：无论是否有逾期，菜单栏都不显示任何文字
+        guard mode != .iconOnly else { return (nil, false) }
         if summary.overdue > 0 {
             return ("\(summary.overdue) 项逾期", true)
         }
-        guard mode != .iconOnly else { return (nil, false) }
         if mode == .count {
             return summary.todayPending > 0 ? ("\(summary.todayPending)", false) : (nil, false)
         }
@@ -244,9 +245,9 @@ enum ScheduleLogic {
 // MARK: - 菜单栏显示模式
 
 enum MenuBarTextMode: String, CaseIterable, Identifiable {
+    case iconOnly
     case next
     case count
-    case iconOnly
 
     var id: String { rawValue }
 

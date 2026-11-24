@@ -15,6 +15,7 @@ swiftc \
   Sources/ScheduleLogic.swift \
   Sources/QuickAddParser.swift \
   Sources/TaskStore.swift \
+  Sources/AppSettings.swift \
   Tests/LogicTests/main.swift
 
 ./.build/logictests

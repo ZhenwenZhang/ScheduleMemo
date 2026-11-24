@@ -27,11 +27,11 @@ def engine():
     return _engine
 
 
-def crop_box(screen_h, frame):
-    """把 AppKit 窗口坐标（左下原点）转换成截图坐标（左上原点）。"""
-    x = frame["x"]
-    y = screen_h - (frame["y"] + frame["h"])
-    return (round(x), round(y), round(x + frame["w"]), round(y + frame["h"]))
+def crop_box(screen_h, frame, pixel_scale=1.0):
+    """把 AppKit 窗口坐标（点、左下原点）转换成截图像素坐标（左上原点）。"""
+    x = frame["x"] * pixel_scale
+    y = (screen_h - (frame["y"] + frame["h"])) * pixel_scale
+    return (round(x), round(y), round(x + frame["w"] * pixel_scale), round(y + frame["h"] * pixel_scale))
 
 
 def main():
@@ -57,6 +57,7 @@ def main():
         print(f"❌ 报告里没有 label={args.label}")
         return 1
 
+    screen_w = entry.get("screenWidth", 0) or 0
     screen_h = entry.get("screenHeight", 1080)
     target = None
     for window in entry.get("windows", []):
@@ -68,9 +69,11 @@ def main():
         return 1
 
     frame = target["frame"]
-    box = crop_box(screen_h, frame)
     image = Image.open(args.image).convert("RGB")
-    pad = args.padding
+    # Retina 屏幕上截图是点数的 2 倍（或其它比例），按实际宽度换算
+    pixel_scale = (image.width / screen_w) if screen_w else 1.0
+    box = crop_box(screen_h, frame, pixel_scale)
+    pad = int(args.padding * pixel_scale)
     box = (max(0, box[0] - pad), max(0, box[1] - pad), min(image.width, box[2] + pad), min(image.height, box[3] + pad))
     crop = image.crop(box)
     scale = 2

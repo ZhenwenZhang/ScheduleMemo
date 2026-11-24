@@ -6,7 +6,7 @@
 
 一个为本机 macOS 定制的**菜单栏日程应用**：常驻菜单栏，点开图标即可查看、添加、修改日程，到点弹出提醒。全部数据保存在本地，不联网、不需要账号。
 
-当前版本 v1.1.0（2026-11-13）。通用二进制，Apple Silicon 与 Intel 均可运行。
+当前版本 v1.2.0（2026-11-24）。通用二进制，Apple Silicon 与 Intel 均可运行。
 
 ![主面板](docs/screenshots/popover.png)
 
@@ -24,7 +24,7 @@
 
 ## 下载安装
 
-前往 **[Releases](https://github.com/ZhenwenZhang/ScheduleMemo/releases/latest)** 下载 `ScheduleMemo-1.1.0.dmg`：
+前往 **[Releases](https://github.com/ZhenwenZhang/ScheduleMemo/releases/latest)** 下载 `ScheduleMemo-1.2.0.dmg`：
 
 1. 双击打开 DMG，把 `ScheduleMemo.app` 拖进 `Applications`；
 2. 打开「应用程序」里的「日程备忘录」，菜单栏右上角出现清单图标；
@@ -36,14 +36,14 @@
 校验下载文件：
 
 ```bash
-shasum -a 256 -c ScheduleMemo-1.1.0.dmg.sha256
+shasum -a 256 -c ScheduleMemo-1.2.0.dmg.sha256
 ```
 
 数据只保存在本机 `~/Library/Application Support/ScheduleMemo/`，不会上传到任何服务器。
 
 ## 功能
 
-- **菜单栏常驻**：清单图标旁直接显示「下一项日程」（如 `14:00 项目周会`）；有逾期时优先显示红色的逾期数量；也可以切换成「今日待办数」或仅图标。
+- **菜单栏常驻**：默认只在菜单栏显示清单图标，不显示任何文字，尽量不占空间；需要时可在「设置 → 菜单栏显示」切换成「下一项日程」或「今日待办数」。
 - **点开即用**：左键点图标弹出面板，右键弹出快捷菜单（打开面板 / 新建 / 今日概况 / 设置 / 数据文件夹 / 退出）。
 - **添加**：面板顶部输入框支持中文自然语言，写「明天 10:00 交报告」回车即可；也可以点「新建」填完整表单。
 - **修改**：点任意一条日程打开编辑表单，可改日期、时间、备注、优先级、提醒。
@@ -61,7 +61,7 @@ shasum -a 256 -c ScheduleMemo-1.1.0.dmg.sha256
 git clone https://github.com/ZhenwenZhang/ScheduleMemo.git
 cd ScheduleMemo
 ./build.sh          # 编译通用二进制并打包 build/ScheduleMemo.app
-./make_dmg.sh       # （可选）生成 build/ScheduleMemo-1.1.0.dmg
+./make_dmg.sh       # （可选）生成 build/ScheduleMemo-1.2.0.dmg
 ./install.sh        # 安装到 ~/Applications 并启动
 ```
 
@@ -101,8 +101,9 @@ cd ScheduleMemo
 
 ### 菜单栏显示与提醒
 
-- 有逾期：菜单栏显示红色 `N 项逾期`；否则显示下一项日程的「时间 + 标题」。
-- 样式可在「设置 → 菜单栏显示」切换。
+- 默认：菜单栏只显示清单图标，不显示日程文字或逾期数量。
+- 需要更多信息时，可在「设置 → 菜单栏显示」切换为「下一项日程」（如 `14:00 项目周会`，逾期时红色显示数量）或「今日待办数」。
+- 悬停菜单栏图标时，工具提示仍会显示下一项与逾期统计。
 - 提醒只在应用运行时弹出；如果错过不久（定时日程 30 分钟内、全天日程 3 小时内）打开应用会补弹。
 
 ### 快捷键
@@ -126,14 +127,14 @@ cd ScheduleMemo
 
 ```bash
 ./build.sh     # 编译 arm64 + x86_64 通用 .app + 生成图标 + ad-hoc 签名
-./tests.sh     # 纯逻辑单元测试（自然语言解析 / 分组 / 提醒时机 / 数据仓库，共 97 项断言）
+./tests.sh     # 纯逻辑单元测试（自然语言解析 / 分组 / 提醒时机 / 数据仓库，共 101 项断言）
 ```
 
 开发验收（可选，需要 Python 与 RapidOCR）：
 
 ```bash
 python3 -m pip install --target .build/pylibs rapidocr_onnxruntime
-./tools/verify_ui.sh   # 启动真实 app，14 个场景截图 + OCR 校验文案、边界、深色模式、菜单栏
+./tools/verify_ui.sh   # 启动真实 app，14 个场景截图 + OCR 校验（会短暂弹窗占屏，建议在独立会话/虚拟机运行）
 ```
 
 验收通过的环境变量开关（仅开发用，正常使用不会触发）：

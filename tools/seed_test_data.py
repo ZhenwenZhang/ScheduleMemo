@@ -67,8 +67,8 @@ def main():
     if kind == "demo":
         write(path, [
             item("提交季度报告", day(-1, 18, 0), priority=2, notes="把 Q4 数据补齐后发给张总", reminder=30),
-            item("项目周会", day(0, 10, 30), priority=2, notes="会议室 A，准备进度截图"),
-            item("整理本周待办", day(0, 14, 0)),
+            item("项目周会", day(-1, 10, 30), priority=2, notes="会议室 A，准备进度截图"),
+            item("整理本周待办", day(-1, 14, 0)),
             item("买牛奶和面包", day(0, 0, 0), all_day=True, priority=0, reminder=None),
             item("牙医复诊", day(1, 9, 0), notes="带上病历本", reminder=30),
             item("读书笔记：深度工作", day(2, 0, 0), all_day=True, priority=0, reminder=None),

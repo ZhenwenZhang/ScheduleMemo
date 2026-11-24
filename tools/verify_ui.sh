@@ -1,6 +1,8 @@
 #!/bin/bash
 # UI 验收：逐个场景启动真实 .app，截图并用 OCR 校验画面文案。
-# 依赖：python3 + .build/pylibs（见 tools/README），仅开发验证用。
+# 注意：会短暂弹出面板、占用屏幕与前台焦点；建议在独立用户会话 / 虚拟机里运行，
+#       不要在正在使用电脑时跑。日常只需 ./tests.sh 与无窗口冒烟检查。
+# 依赖：python3 + .build/pylibs（见 README），仅开发验证用。
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
@@ -10,6 +12,10 @@ APP="$PWD/build/ScheduleMemo.app/Contents/MacOS/ScheduleMemo"
 pkill -f "Documents/ToDoList/build/ScheduleMemo.app" 2>/dev/null || true
 sleep 1
 OUT="$PWD/.build/verify"
+
+# 日期相关的文案随运行日期动态生成，避免写死日期导致过期
+TODAY_LABEL="$(python3 -c "import datetime;d=datetime.date.today();w='一二三四五六日'[d.weekday()];print(f'{d.month}月{d.day}日 周{w}')")"
+TOMORROW_LABEL="$(python3 -c "import datetime;d=datetime.date.today()+datetime.timedelta(days=1);w='一二三四五六日'[d.weekday()];print(f'{d.month}月{d.day}日 周{w}')")"
 rm -rf "$OUT"
 mkdir -p "$OUT/shots" "$OUT/data" "$OUT/reports"
 
@@ -26,6 +32,7 @@ launch() {
   shift 4
   python3 tools/seed_test_data.py "$kind" "$OUT/data/$name"
   env "SCHEDULEMEMO_DATA_DIR=$OUT/data/$name" \
+      "SCHEDULEMEMO_DEFAULTS_SUITE=com.zhenwenzhang.schedulememo.verify.$name.$$.$RANDOM" \
       "SCHEDULEMEMO_DEBUG_REPORT=$OUT/reports/$name.json" \
       "SCHEDULEMEMO_AUTO_QUIT_SECONDS=$quit_after" \
       "SCHEDULEMEMO_DISABLE_AUTO_CLOSE=1" \
@@ -91,8 +98,8 @@ PY
 }
 
 say "▶ 场景 1：主面板（含逾期 / 今天 / 已完成）"
-launch popover_demo demo 3.4 8 SCHEDULEMEMO_SHOW_POPOVER_ON_LAUNCH=1
-check_ui popover_demo _NSPopoverWindow "日程备忘录" "新建" "今天" "7天内" "全部" "已逾期" "今天 · 11月13日" "18:00" "10:30" "14:00" "全天" "已完成" "未完成 7"
+launch popover_demo demo 3.4 8 SCHEDULEMEMO_SHOW_POPOVER_ON_LAUNCH=1 SCHEDULEMEMO_MENUBAR_MODE=next
+check_ui popover_demo _NSPopoverWindow "日程备忘录" "新建" "今天" "7天内" "全部" "已逾期" "今天 · $TODAY_LABEL" "18:00" "10:30" "14:00" "全天" "已完成" "未完成 7"
 check_report popover_demo 'r["statusTitle"] == "3 项逾期"' "菜单栏显示逾期数量"
 check_menu_text popover_demo "3项逾期"
 check_report popover_demo 'r["popoverShown"] and r["popoverContentWidth"] == 240 and 380 <= r["popoverContentHeight"] <= 540' "面板尺寸合理（宽 240）"
@@ -111,10 +118,10 @@ launch empty empty 3.4 8 SCHEDULEMEMO_SHOW_POPOVER_ON_LAUNCH=1
 check_ui empty _NSPopoverWindow "今天暂无安排" "添加日程" "回车即可添加" "未完成 0 项"
 
 say "▶ 场景 5：菜单栏显示下一项日程"
-launch future future 3.4 8 SCHEDULEMEMO_SHOW_POPOVER_ON_LAUNCH=1 SCHEDULEMEMO_INITIAL_FILTER=week
+launch future future 3.4 8 SCHEDULEMEMO_SHOW_POPOVER_ON_LAUNCH=1 SCHEDULEMEMO_INITIAL_FILTER=week SCHEDULEMEMO_MENUBAR_MODE=next
 check_report future 'r["statusTitle"].startswith("明天 09:00 交季度总结")' "菜单栏文案：明天 09:00 交季度总结"
 check_menu_text future "明天09:00交季度总结"
-check_ui future _NSPopoverWindow "明天 · 11月14日" "交季度总结" "09:00" "整理书架" "牙医复诊" "全天" "未完成 3 项"
+check_ui future _NSPopoverWindow "明天 · $TOMORROW_LABEL" "交季度总结" "09:00" "整理书架" "牙医复诊" "全天" "未完成 3 项"
 
 say "▶ 场景 6：点击图标开关面板（同一代码路径）"
 launch smoke demo 4.0 7 SCHEDULEMEMO_SMOKE_CLICK=1
@@ -132,13 +139,13 @@ check_report esc_close 'data.get("escape", {}).get("shownAfterEscape") is False'
 say "▶ 场景 9：Esc 退出新建表单（面板保留）"
 launch esc_editor demo 4.2 9 SCHEDULEMEMO_SHOW_POPOVER_ON_LAUNCH=1 SCHEDULEMEMO_OPEN_EDITOR=1 SCHEDULEMEMO_SMOKE_ESCAPE_EDITOR=1
 check_report esc_editor 'data.get("escapeEditor", {}).get("shownAfterEscape") is True and data["escapeEditor"].get("contentHeight", 0) < 556' "Esc 退出表单、面板仍在"
-check_ui esc_editor _NSPopoverWindow "已逾期" "今天 · 11月13日"
+check_ui esc_editor _NSPopoverWindow "已逾期" "今天 · $TODAY_LABEL"
 
 say "▶ 场景 10：深色模式"
 launch dark demo 3.6 8 SCHEDULEMEMO_SHOW_POPOVER_ON_LAUNCH=1 SCHEDULEMEMO_DARK=1
 python3 tools/ui_check.py --image "$OUT/shots/dark.png" --report "$OUT/reports/dark.json" \
     --label shown --window-class _NSPopoverWindow --max-luma 140 \
-    --expect "日程备忘录" "已逾期" "今天 · 11月13日" "未完成 7" \
+    --expect "日程备忘录" "已逾期" "今天 · $TODAY_LABEL" "未完成 7" \
     --save-crop "$OUT/shots/dark-crop.png" > "$OUT/dark.check.txt" 2>&1
 if [ $? -eq 0 ]; then ok "dark：$(tail -1 "$OUT/dark.check.txt")"; else ng "dark"; sed 's/^/     /' "$OUT/dark.check.txt"; fi
 
@@ -157,10 +164,10 @@ if [ $? -eq 0 ]; then ok "dark_editor：$(tail -1 "$OUT/dark_editor.check.txt")"
 
 say "▶ 场景 13：菜单栏显示模式切换（设置即时生效）"
 launch menubar today 3.4 6 SCHEDULEMEMO_SMOKE_MENUBAR=1
+check_report menubar 'data.get("menuBarModes", {}).get("defaultTitle") == ""' "默认仅图标：不显示文字"
 check_report menubar 'data.get("menuBarModes", {}).get("nextModeTitle") == "整理桌面"' "下一项模式：整理桌面"
 check_report menubar 'data.get("menuBarModes", {}).get("countModeTitle") == "1"' "数量模式：1"
-check_report menubar 'data.get("menuBarModes", {}).get("iconOnlyTitle") == ""' "仅图标模式：无文字"
-check_report menubar 'data.get("menuBarModes", {}).get("nextModeTitle") == "整理桌面"' "切回下一项模式"
+check_report menubar 'data.get("menuBarModes", {}).get("iconOnlyTitle") == ""' "切回仅图标：无文字"
 
 say "▶ 场景 14：到期提醒浮窗"
 launch reminder empty 3.4 8 SCHEDULEMEMO_TEST_REMINDER=1

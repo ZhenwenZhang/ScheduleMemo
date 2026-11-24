@@ -34,6 +34,11 @@ enum DevHooks {
     static func run(context: Context) {
         let env = environment
 
+        if let rawMode = env["SCHEDULEMEMO_MENUBAR_MODE"],
+           let mode = MenuBarTextMode(rawValue: rawMode) {
+            context.settings.menuBarMode = mode
+        }
+
         if let reportPath = env["SCHEDULEMEMO_DEBUG_REPORT"] {
             writeDebugReport(context: context, to: reportPath, label: "initial", after: 1.2)
             writeDebugReport(context: context, to: reportPath, label: "shown", after: 2.4)
@@ -112,20 +117,19 @@ enum DevHooks {
         }
 
         if env["SCHEDULEMEMO_SMOKE_MENUBAR"] == "1" {
-            context.settings.menuBarMode = .next
             after(1.8) {
                 var result: [String: Any] = [
-                    "initialTitle": context.statusController.debugSnapshot()["statusTitle"] as? String ?? ""
+                    "defaultTitle": context.statusController.debugSnapshot()["statusTitle"] as? String ?? ""
                 ]
-                context.settings.menuBarMode = .count
+                context.settings.menuBarMode = .next
                 after(0.4) {
-                    result["countModeTitle"] = context.statusController.debugSnapshot()["statusTitle"] as? String ?? ""
-                    context.settings.menuBarMode = .iconOnly
+                    result["nextModeTitle"] = context.statusController.debugSnapshot()["statusTitle"] as? String ?? ""
+                    context.settings.menuBarMode = .count
                     after(0.4) {
-                        result["iconOnlyTitle"] = context.statusController.debugSnapshot()["statusTitle"] as? String ?? ""
-                        context.settings.menuBarMode = .next
+                        result["countModeTitle"] = context.statusController.debugSnapshot()["statusTitle"] as? String ?? ""
+                        context.settings.menuBarMode = .iconOnly
                         after(0.4) {
-                            result["nextModeTitle"] = context.statusController.debugSnapshot()["statusTitle"] as? String ?? ""
+                            result["iconOnlyTitle"] = context.statusController.debugSnapshot()["statusTitle"] as? String ?? ""
                             writeExtra(context: context, key: "menuBarModes", value: result)
                         }
                     }

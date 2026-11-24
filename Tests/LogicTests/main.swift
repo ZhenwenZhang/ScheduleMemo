@@ -189,6 +189,11 @@ func testSections() {
     let text4 = ScheduleLogic.menuBarText(items: cleanItems, now: now, mode: .iconOnly)
     expectEqual(text4.text, nil, "仅图标模式无文字")
 
+    // 有逾期时，仅图标模式也不能冒出「N 项逾期」
+    let textIconOnlyAlert = ScheduleLogic.menuBarText(items: items, now: now, mode: .iconOnly)
+    expectEqual(textIconOnlyAlert.text, nil, "仅图标模式即使有逾期也无文字")
+    expect(!textIconOnlyAlert.alert, "仅图标模式不高亮")
+
     let empty = ScheduleLogic.menuBarText(items: [], now: now, mode: .next)
     expectEqual(empty.text, nil, "空列表无文字")
 
@@ -250,6 +255,23 @@ func testReminders() {
     let second = ScheduleItem(title: "后", due: base.addingTimeInterval(5 * 60), reminderMinutes: 5)
     let ordered = ScheduleLogic.remindersDue(items: [second, first], now: base)
     expectEqual(ordered.first?.title, "先", "提醒按时间排序")
+}
+
+// MARK: - 默认设置
+
+func testMenuBarDefault() {
+    let suiteName = "com.zhenwenzhang.schedulememo.test.\(UUID().uuidString)"
+    let defaults = UserDefaults(suiteName: suiteName)!
+    defer { defaults.removePersistentDomain(forName: suiteName) }
+
+    MainActor.assumeIsolated {
+        let settings = AppSettings(defaults: defaults)
+        expectEqual(settings.menuBarMode, .iconOnly, "默认菜单栏仅显示图标")
+
+        settings.menuBarMode = .next
+        let reloaded = AppSettings(defaults: defaults)
+        expectEqual(reloaded.menuBarMode, .next, "保存过的菜单栏模式仍然生效")
+    }
 }
 
 // MARK: - 数据仓库
@@ -341,6 +363,7 @@ testParser()
 testSections()
 testNextWeekStartDay()
 testReminders()
+testMenuBarDefault()
 testStore()
 testStoreEdgeCases()
 
